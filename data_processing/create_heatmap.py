@@ -1,9 +1,50 @@
 import numpy as np
 from scipy.ndimage import gaussian_filter
+from skimage.filters import gaussian
 import json
 import argparse
 import os
 import zarr
+
+def width_to_sigma(width, eps, lower_bound, upper_bound):
+    # shrink needs to be between 0 and 1
+    sigma = np.sqrt(-(width**2) / (2*np.log(eps)))
+    #### bounding ####
+    if lower_bound and upper_bound:
+        if sigma < lower_bound:
+            sigma = lower_bound
+        elif sigma > upper_bound:
+            sigma = upper_bound
+
+    return int(sigma)
+
+def create_gaussian_stamp(width, eps, lower_bound, upper_bound):
+    """
+    Creates a 3D Gaussian stamp (cube) with size width x width x width.
+    If width is even, set width = width - 1.
+    """
+    if width % 2 == 0:
+        width = width - 1
+    
+    sigma = width_to_sigma(width, eps, lower_bound, upper_bound)
+    
+    # Create a 3D matrix (stamp)
+    stamp = np.zeros((width, width, width))
+    center = width // 2
+    
+    # Set the center point to 1 (Gaussian peak)
+    stamp[center, center, center] = 1
+
+    # Apply 3D Gaussian filter to create the Gaussian distribution in 3D space
+    #stamp = gaussian_filter(stamp, sigma=sigma)
+    #Julia:
+    stamp = gaussian(stamp, sigma=sigma, truncate=10.0, mode='constant')
+    
+    # Threshold the values based on epsilon and apply the scaling factor
+    stamp[stamp < eps] = 0
+    stamp = stamp * 8 * np.pi * sigma**3
+
+    return stamp
 
 def create_heatmap(image_shape, coordinates, protein_types, sigma_dict):
     """
@@ -22,18 +63,35 @@ def create_heatmap(image_shape, coordinates, protein_types, sigma_dict):
 
     for coord, protein in zip(coordinates, protein_types):
         z, y, x = map(int, coord)  # Convert coordinates to integers for indexing
-        sigma = sigma_dict.get(protein, 1.0)  # Default sigma is 1.0 if protein type is not found
-
+        '''sigma = sigma_dict.get(protein, 1.0)  # Default sigma is 1.0 if protein type is not found'''
+        width = sigma_dict.get(protein, 1.0)  # Default sigma is 1.0 if protein type is not found
         # Create a sparse 3D array with a single point at the coordinate
         point = np.zeros(image_shape)
         point[z, y, x] = 1
 
-        # Apply Gaussian filter with constant boundary condition
+        '''# Apply Gaussian filter with constant boundary condition
         # mode='constant' ensures that values outside the image bounds are treated as zero
-        gaussian = gaussian_filter(point, sigma=sigma, mode='constant')
+        gaussian = gaussian_filter(point, sigma=sigma, mode='constant')'''
+        gaussian = create_gaussian_stamp(int(width), eps=0.00001, lower_bound=None, upper_bound=None )
+        '''# Update the heatmap using the maximum of the current heatmap and the new Gaussian (takes care of overlapping gaussians)
+        heatmap = np.maximum(heatmap, gaussian)'''
 
-        # Update the heatmap using the maximum of the current heatmap and the new Gaussian (takes care of overlapping gaussians)
-        heatmap = np.maximum(heatmap, gaussian)
+        # Define the bounds for placement of the Gaussian in the heatmap
+        z_min = max(0, z - gaussian.shape[0] // 2)
+        z_max = min(image_shape[0], z + gaussian.shape[0] // 2 + 1)
+        y_min = max(0, y - gaussian.shape[1] // 2)
+        y_max = min(image_shape[1], y + gaussian.shape[1] // 2 + 1)
+        x_min = max(0, x - gaussian.shape[2] // 2)
+        x_max = min(image_shape[2], x + gaussian.shape[2] // 2 + 1)
+
+        # Slice the heatmap and add the Gaussian stamp (handling boundaries)
+        heatmap[z_min:z_max, y_min:y_max, x_min:x_max] = np.maximum(
+            heatmap[z_min:z_max, y_min:y_max, x_min:x_max], gaussian[
+                (z_min - (z - gaussian.shape[0] // 2)):(z_max - (z - gaussian.shape[0] // 2)),
+                (y_min - (y - gaussian.shape[1] // 2)):(y_max - (y - gaussian.shape[1] // 2)),
+                (x_min - (x - gaussian.shape[2] // 2)):(x_max - (x - gaussian.shape[2] // 2))
+            ]
+        )
 
     return heatmap
 def parse_json_files(json_files):
@@ -73,12 +131,12 @@ def create_sigma_dict():
         dict: Protein name to sigma mapping.
     """
     return {
-        "apo-ferritin": 3.0,
-        "beta-amylase": 5.0,
-        "beta-galactosidase": 4.0,
-        "ribosome": 6.0,
-        "thyroglobulin": 2.5,
-        "virus-like-particle": 3.5
+        "apo-ferritin": 6,#3.0,
+        "beta-amylase": 6,#5.0,
+        "beta-galactosidase": 6,#4.0,
+        "ribosome": 6,#6.0,
+        "thyroglobulin": 6,#2.5,
+        "virus-like-particle": 6#3.5
     }
 
 def process_tomogram(json_folder, image_shape):
