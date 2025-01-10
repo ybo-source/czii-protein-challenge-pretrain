@@ -4,6 +4,26 @@ import torch
 import torch_em
 from torch_em.model import AnisotropicUNet
 
+from .data_loader import CreateDataLoader
+
+#Julias code ... don't know yet if I need to chage it ...
+def get_in_channels(image_path):
+    # Load the first image to determine the number of channels
+    image = np.asarray(imread(image_path))
+
+    # Check if the first image is grayscale or RGB
+    if len(image.shape) == 2:
+        in_channels = 1
+        # print(f"About to process grayscale images")
+    elif image.shape[-1] == 4:
+        in_channels = 3
+        # print(f"About to process RGB images")
+    else:
+        in_channels = image.shape[-1]
+        # print(f"About to process images of dimensions = {image.shape}")
+
+    return in_channels
+
 
 def get_3d_model(
     in_channels: int,
@@ -62,8 +82,7 @@ def supervised_training(
         out_channels: The number of output channels of the UNet.
         loader_kwargs: Additional keyword arguments for the dataloader.
     """
-    #Julia code:
-    from colony_utils import CreateDataLoader
+    #TODO Im missing a few arguments here
     train_loader, val_loader, _ = CreateDataLoader(train_images, train_labels, val_images, val_labels, test_images, test_labels, 
                                                     raw_transform=raw_transform, transform=transform, 
                                                     patch_shape=patch_shape, num_workers=num_workers, batch_size=batch_size, eps=epsilon, sigma=sigma, lower_bound=lower_bound, upper_bound=upper_bound)
@@ -75,8 +94,7 @@ def supervised_training(
         check_loader(val_loader, n_samples=4)
         return
     
-    #Julia code:
-    from colony_utils.utils import get_in_channels
+    #TODO train_images: also used in CreateDataLoader
     in_channels = get_in_channels(train_images[0])
 
     model = get_3d_model(in_channels=in_channels,out_channels=out_channels)
