@@ -15,6 +15,8 @@ def train(key, ignore_label = None, training_2D = False, testset = True, extensi
     train_paths = get_paths("train", datasets=datasets, train_root=TRAIN_ROOT, output_root=OUTPUT_ROOT, testset=testset, extension)
     val_paths = get_paths("val", datasets=datasets, train_root=TRAIN_ROOT, output_root=OUTPUT_ROOT, testset=testset, extension)
 
+    #TODO call supervised training from utils.training
+
 
 
 def main():
