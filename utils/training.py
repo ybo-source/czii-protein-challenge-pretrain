@@ -3,10 +3,11 @@ from typing import Optional, Tuple
 import torch
 import torch_em
 from torch_em.model import AnisotropicUNet
+from torch_em.torch_em.self_training.loss import l2_regularisation
 
 from .data_loader import CreateDataLoader
 
-#Julias code ... don't know yet if I need to chage it ...
+'''#Julias code ... don't know yet if I need to chage it ...
 def get_in_channels(image_path):
     # Load the first image to determine the number of channels
     image = np.asarray(imread(image_path))
@@ -22,7 +23,7 @@ def get_in_channels(image_path):
         in_channels = image.shape[-1]
         # print(f"About to process images of dimensions = {image.shape}")
 
-    return in_channels
+    return in_channels'''
 
 
 def get_3d_model(
@@ -94,14 +95,14 @@ def supervised_training(
         check_loader(val_loader, n_samples=4)
         return
     
-    #TODO train_images: also used in CreateDataLoader
-    in_channels = get_in_channels(train_images[0])
+    #TODO train_images: also used in CreateDataLoader, ACTUALLY ONLY USING 1 CHANNEL?
+    in_channels = 1 #get_in_channels(train_images[0])
 
     model = get_3d_model(in_channels=in_channels,out_channels=out_channels)
 
     loss, metric = None, None
 
-    loss = #TODO
+    loss = l2_regularisation(model) #TODO L2 LOSS
     metric = loss
 
 
