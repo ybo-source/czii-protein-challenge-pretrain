@@ -71,7 +71,7 @@ def create_heatmap(image_shape, coordinates, protein_types, width_dict):
         '''# Apply Gaussian filter with constant boundary condition
         # mode='constant' ensures that values outside the image bounds are treated as zero
         gaussian = gaussian_filter(point, sigma=sigma, mode='constant')'''
-        gaussian = create_gaussian_stamp(int(width * 0.24), eps=0.00001, lower_bound=None, upper_bound=None )
+        gaussian = create_gaussian_stamp(int(width * 0.3), eps=0.00001, lower_bound=None, upper_bound=None )
         '''# Update the heatmap using the maximum of the current heatmap and the new Gaussian (takes care of overlapping gaussians)
         heatmap = np.maximum(heatmap, gaussian)'''
 
@@ -93,6 +93,7 @@ def create_heatmap(image_shape, coordinates, protein_types, width_dict):
         )
 
     return heatmap
+    
 def parse_json_files(json_files):
     """
     Parse multiple JSON files to extract coordinates and protein names.
