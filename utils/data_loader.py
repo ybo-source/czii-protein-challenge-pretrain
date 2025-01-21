@@ -1,11 +1,12 @@
 from torch.utils.data import DataLoader
+from .heatmap_loader import HeatmapLoader
 
 def CreateDataLoader(train_images, train_labels, val_images, val_labels, test_images, test_labels, raw_transform, transform, patch_shape, num_workers, batch_size, eps=0.00001, sigma=None, lower_bound=None, upper_bound=None):
     
-    #ImageCollectionDatasetJsonLabels is from Julias code, need to replace it with my heatmap loader
-    train_set = ImageCollectionDatasetJsonLabels(train_images, train_labels, patch_shape, raw_transform=raw_transform, transform=transform, eps=eps, sigma=sigma, lower_bound=lower_bound, upper_bound=upper_bound)
-    val_set = ImageCollectionDatasetJsonLabels(val_images, val_labels, patch_shape, raw_transform=raw_transform, transform=transform, eps=eps, sigma=sigma, lower_bound=lower_bound, upper_bound=upper_bound)
-    test_set = ImageCollectionDatasetJsonLabels(test_images, test_labels, patch_shape, raw_transform=raw_transform, transform=transform, eps=eps, sigma=sigma, lower_bound=lower_bound, upper_bound=upper_bound)
+
+    train_set = HeatmapLoader(train_images, train_labels, patch_shape, raw_transform=raw_transform, transform=transform, eps=eps, sigma=sigma, lower_bound=lower_bound, upper_bound=upper_bound)
+    val_set = HeatmapLoader(val_images, val_labels, patch_shape, raw_transform=raw_transform, transform=transform, eps=eps, sigma=sigma, lower_bound=lower_bound, upper_bound=upper_bound)
+    test_set = HeatmapLoader(test_images, test_labels, patch_shape, raw_transform=raw_transform, transform=transform, eps=eps, sigma=sigma, lower_bound=lower_bound, upper_bound=upper_bound)
 
 
     # put into DataLoader

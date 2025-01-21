@@ -91,6 +91,8 @@ def create_heatmap(image_shape, coordinates, protein_types, width_dict):
                 (x_min - (x - gaussian.shape[2] // 2)):(x_max - (x - gaussian.shape[2] // 2))
             ]
         )
+    
+    assert image_shape == heatmap.shape, f"Shape mismatch: image_shape={image_shape}, heatmap.shape={heatmap.shape}"
 
     return heatmap
     
