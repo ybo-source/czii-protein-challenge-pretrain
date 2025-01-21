@@ -3,7 +3,7 @@ from typing import Optional, Tuple
 import torch
 import torch_em
 from torch_em.model import AnisotropicUNet
-from torch_em.torch_em.self_training.loss import l2_regularisation
+import torch.nn as nn
 
 from .data_loader import CreateDataLoader
 
@@ -102,7 +102,7 @@ def supervised_training(
 
     loss, metric = None, None
 
-    loss = l2_regularisation(model) #TODO L2 LOSS
+    loss = nn.MSELoss(reduction="mean")
     metric = loss
 
 
