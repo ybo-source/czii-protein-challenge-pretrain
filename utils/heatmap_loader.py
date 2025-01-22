@@ -2,7 +2,10 @@ import torch
 from torch.utils.data import Dataset
 from torch_em.util import ensure_spatial_array, ensure_tensor_with_channels
 
-from data_processing.create_heatmap import process_tomogram, get_tomo_shape
+import zarr
+import os
+
+from data_processing.create_heatmap import process_tomogram
 
 class HeatmapLoader(torch.utils.data.Dataset):
     max_sampling_attempts = 500
@@ -73,9 +76,12 @@ class HeatmapLoader(torch.utils.data.Dataset):
         index = np.random.randint(0, len(self.raw_images))
         raw, label = self.raw_images[index], self.label_images[index]
 
-        raw = #TODO read zarr file
-        self.tomo_shape = get_tomo_shape(self.raw_image_paths) #TODO decide which form does the raw_image_path have and adjust the function accordingly
-        label = process_tomogram(self.label_paths, self.tomo_shape)
+        #TODO this is specific for challenge zarr files now, maybe need to generalize in the future
+        #zarr_file = zarr.open(f"{raw}/VoxelSpacing10.000/denoised.zarr/0", mode='r')
+        zarr_file = zarr.open(os.path.join(raw, "VoxelSpacing10.000", "denoised.zarr", "0"), mode='r')
+        raw = zarr_file[:]
+        #sigma is not really used in my process_tomogram ... TODO ?
+        label = process_tomogram(label, raw.shape, eps=self.eps, sigma=self.sigma, lower_bound=self.lower_bound, upper_bound=self.upper_bound)
 
         have_raw_channels = raw.ndim == 4  # 3D with channels
         have_label_channels = label.ndim == 4

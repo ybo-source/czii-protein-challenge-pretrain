@@ -46,7 +46,7 @@ def create_gaussian_stamp(width, eps, lower_bound, upper_bound):
 
     return stamp
 
-def create_heatmap(image_shape, coordinates, protein_types, width_dict):
+def create_heatmap(image_shape, coordinates, protein_types, width_dict, eps=0.00001, sigma=None, lower_bound=None, upper_bound=None):
     """
     Create a 3D heatmap based on given coordinates and protein types.
 
@@ -71,7 +71,7 @@ def create_heatmap(image_shape, coordinates, protein_types, width_dict):
         '''# Apply Gaussian filter with constant boundary condition
         # mode='constant' ensures that values outside the image bounds are treated as zero
         gaussian = gaussian_filter(point, sigma=sigma, mode='constant')'''
-        gaussian = create_gaussian_stamp(int(width * 0.3), eps=0.00001, lower_bound=None, upper_bound=None )
+        gaussian = create_gaussian_stamp(int(width * 0.3), eps, lower_bound, upper_bound)
         '''# Update the heatmap using the maximum of the current heatmap and the new Gaussian (takes care of overlapping gaussians)
         heatmap = np.maximum(heatmap, gaussian)'''
 
@@ -141,7 +141,7 @@ def create_width_dict():
         "virus-like-particle": 79.07
     }
 
-def process_tomogram(json_folder, image_shape):
+def process_tomogram(json_folder, image_shape, eps=0.00001, sigma=None, lower_bound=None, upper_bound=None):
     """
     Process a tomogram by creating a heatmap based on protein data from JSON files.
 
@@ -155,7 +155,7 @@ def process_tomogram(json_folder, image_shape):
     json_files = [os.path.join(json_folder, f) for f in os.listdir(json_folder) if f.endswith('.json')]
     coordinates, protein_types = parse_json_files(json_files)
     width_dict = create_width_dict()
-    return create_heatmap(image_shape, coordinates, protein_types, width_dict)
+    return create_heatmap(image_shape, coordinates, protein_types, width_dict, eps, sigma, lower_bound, upper_bound)
 
 def get_tomo_shape(zarr_folder):
     """
