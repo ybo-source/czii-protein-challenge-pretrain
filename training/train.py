@@ -12,6 +12,7 @@ def train(key, ignore_label = None, training_2D = False, testset = True, extensi
     datasets = [
     ""
 ]
+    #TODO dataset_splits: dont have h5 files but folders... need to think about how I want to do that 
     train_paths = get_paths("train", datasets=datasets, train_root=TRAIN_ROOT, output_root=OUTPUT_ROOT, testset=testset, extension)
     val_paths = get_paths("val", datasets=datasets, train_root=TRAIN_ROOT, output_root=OUTPUT_ROOT, testset=testset, extension)
 
