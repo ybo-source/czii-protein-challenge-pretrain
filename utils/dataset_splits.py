@@ -67,13 +67,14 @@ def _require_train_val_split(datasets, train_root, output_root, extension):
             json.dump({"train": train, "val": val}, f)
 
 
-def get_paths(split, datasets, train_root, output_root, testset=True, extension=""):
+def get_paths(split, datasets, train_root, output_root, testset=True, extension="", label_root=None):
     if testset:
         _require_train_val_test_split(datasets, train_root, output_root, extension)
     else:
         _require_train_val_split(datasets, train_root, output_root, extension)
 
     paths = []
+    label_paths = []
     for ds in datasets:
         split_path = os.path.join(output_root, f"split-{ds}.json")
         with open(split_path) as f:
@@ -87,7 +88,23 @@ def get_paths(split, datasets, train_root, output_root, testset=True, extension=
             # Paths for folders
             ds_paths = [os.path.join(ds_path, name) for name in names]
 
-        assert all(os.path.exists(path) for path in ds_paths)
-        paths.extend(ds_paths)
+        # Label paths for the current dataset
+        if label_root:
+            ds_label_path = os.path.join(label_root, ds)
+            if any(os.path.isfile(os.path.join(ds_label_path, f)) for f in os.listdir(ds_label_path)):
+                # File-based labels
+                ds_label_paths = [os.path.join(ds_label_path, name) for name in names]
+            else:
+                # Folder-based labels
+                ds_label_paths = [os.path.join(ds_label_path, name) for name in names]
+        else:
+            ds_label_paths = []
 
-    return paths
+        assert all(os.path.exists(path) for path in ds_paths)
+        if label_root:
+            assert all(os.path.exists(path) for path in ds_label_paths)
+
+        paths.extend(ds_paths)
+        label_paths.extend(ds_label_paths)
+
+    return paths, label_paths
