@@ -1,7 +1,6 @@
 import os
 from glob import glob
 import json
-
 from sklearn.model_selection import train_test_split
 
 TRAIN_ROOT = ""
@@ -23,16 +22,24 @@ def _require_train_val_test_split(datasets, train_root, output_root, extension):
         if os.path.exists(split_path):
             continue
 
-        file_paths = sorted(glob(os.path.join(train_root, ds, f"*.{extension}")))
-        file_names = [os.path.basename(path) for path in file_paths]
+        ds_path = os.path.join(train_root, ds)
+        #need to check if the dataset contains files or folders (like eg for zarr)
+        if any(os.path.isfile(os.path.join(ds_path, f)) for f in os.listdir(ds_path)):
+            # If the dataset contains files
+            file_paths = sorted(glob(os.path.join(ds_path, f"*.{extension}")))
+            file_names = [os.path.basename(path) for path in file_paths]
+        else:
+            # If the dataset contains folders
+            file_names = sorted(next(os.walk(ds_path))[1])  # Get subfolder names
 
         train, val, test = _train_val_test_split(file_names)
 
         with open(split_path, "w") as f:
             json.dump({"train": train, "val": val, "test": test}, f)
 
+
 def _require_train_val_split(datasets, train_root, output_root, extension):
-    train_ratio, val_ratio= 0.8, 0.2
+    train_ratio, val_ratio = 0.8, 0.2
 
     def _train_val_split(names):
         train, val = train_test_split(names, test_size=1 - train_ratio, shuffle=True)
@@ -44,15 +51,23 @@ def _require_train_val_split(datasets, train_root, output_root, extension):
         if os.path.exists(split_path):
             continue
 
-        file_paths = sorted(glob(os.path.join(train_root, ds, f"*.{extension}")))
-        file_names = [os.path.basename(path) for path in file_paths]
+        ds_path = os.path.join(train_root, ds)
+        #need to check if the dataset contains files or folders (like eg for zarr)
+        if any(os.path.isfile(os.path.join(ds_path, f)) for f in os.listdir(ds_path)):
+            # If the dataset contains files
+            file_paths = sorted(glob(os.path.join(ds_path, f"*.{extension}")))
+            file_names = [os.path.basename(path) for path in file_paths]
+        else:
+            # If the dataset contains folders
+            file_names = sorted(next(os.walk(ds_path))[1])  # Get subfolder names
 
         train, val = _train_val_split(file_names)
 
         with open(split_path, "w") as f:
             json.dump({"train": train, "val": val}, f)
 
-def get_paths(split, datasets, train_root, output_root, testset=True, extension):
+
+def get_paths(split, datasets, train_root, output_root, testset=True, extension=""):
     if testset:
         _require_train_val_test_split(datasets, train_root, output_root, extension)
     else:
@@ -63,7 +78,15 @@ def get_paths(split, datasets, train_root, output_root, testset=True, extension)
         split_path = os.path.join(output_root, f"split-{ds}.json")
         with open(split_path) as f:
             names = json.load(f)[split]
-        ds_paths = [os.path.join(train_root, ds, name) for name in names]
+
+        ds_path = os.path.join(train_root, ds)
+        if any(os.path.isfile(os.path.join(ds_path, f)) for f in os.listdir(ds_path)):
+            # Paths for files
+            ds_paths = [os.path.join(ds_path, name) for name in names]
+        else:
+            # Paths for folders
+            ds_paths = [os.path.join(ds_path, name) for name in names]
+
         assert all(os.path.exists(path) for path in ds_paths)
         paths.extend(ds_paths)
 
