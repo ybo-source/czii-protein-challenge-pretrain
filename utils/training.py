@@ -73,9 +73,9 @@ def supervised_training(
     out_channels: int = 2,
     augmentations:Optional[bool] = False,
     eps:float = 1e-5, 
-    sigma: float = None, #TODO float or int?
-    lower_bound: float = None, #TODO float or int?
-    upper_bound: float = None, #TODO float or int?
+    sigma: int = None, 
+    lower_bound: float = None, 
+    upper_bound: float = None, 
     **loader_kwargs,
 ):
     """
@@ -99,15 +99,15 @@ def supervised_training(
         augmentations: Set to true if autmentations are needed.
         loader_kwargs: Additional keyword arguments for the dataloader.
     """
-
+sss
     if augmentations:
-        raw_transform = DataAugmentations(p=0.25) #TODO if needed
+        raw_transform = DataAugmentations(p=0.25)
         transform = get_augmentations(ndim=2)
     else:
         raw_transform = None
         transform = None
 
-    num_workers = 1 #TODO
+    num_workers = 6 #Julias example
 
     train_loader, val_loader, _ = CreateDataLoader(train_paths, train_label_paths, val_paths, val_label_paths, test_paths, test_label_paths, 
                                                     raw_transform=raw_transform, transform=transform, 
@@ -120,7 +120,6 @@ def supervised_training(
         check_loader(val_loader, n_samples=4)
         return
     
-    #TODO train_images: also used in CreateDataLoader, ACTUALLY ONLY USING 1 CHANNEL?
     in_channels = 1 #get_in_channels(train_images[0])
 
     model = get_3d_model(in_channels=in_channels,out_channels=out_channels)
