@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import Dataset
 from torch_em.util import ensure_spatial_array, ensure_tensor_with_channels
+import numpy as np
 
 import zarr
 import os
@@ -63,17 +64,19 @@ class HeatmapLoader(torch.utils.data.Dataset):
         return self._ndim
 
     def _sample_bounding_box(self, shape):
-        depth, height, width = shape
-        z_start = np.random.randint(0, depth - self.patch_size[0] + 1)
-        y_start = np.random.randint(0, height - self.patch_size[1] + 1)
-        x_start = np.random.randint(0, width - self.patch_size[2] + 1)
-        return (slice(z_start, z_start + self.patch_size[0]),
-                slice(y_start, y_start + self.patch_size[1]),
-                slice(x_start, x_start + self.patch_size[2]))
-
+        if any(sh < psh for sh, psh in zip(shape, self.patch_shape)):
+            raise NotImplementedError(
+                f"Image padding is not supported yet. Data shape {shape}, patch shape {self.patch_shape}"
+            )
+        bb_start = [
+            np.random.randint(0, sh - psh) if sh - psh > 0 else 0
+            for sh, psh in zip(shape, self.patch_shape)
+        ]
+        return tuple(slice(start, start + psh) for start, psh in zip(bb_start, self.patch_shape))
+        
     def _get_sample(self, index):
         if self.sample_random_index:
-        index = np.random.randint(0, len(self.raw_images))
+            index = np.random.randint(0, len(self.raw_images))
         raw, label = self.raw_images[index], self.label_images[index]
 
         #TODO this is specific for challenge zarr files now, maybe need to generalize in the future

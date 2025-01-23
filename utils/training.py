@@ -31,6 +31,7 @@ def get_in_channels(image_path):
 def get_3d_model(
     in_channels: int,
     out_channels: int,
+    scale_factors: Tuple[Tuple[int, int, int]] = [[1, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2]],
     initial_features: int = 32,
     final_activation: str = "Sigmoid",
 ) -> torch.nn.Module:
@@ -62,10 +63,7 @@ def supervised_training(
     train_label_paths: Tuple[str],
     val_paths: Tuple[str],
     val_label_paths: Tuple[str],
-    test_paths: Optional[Tuple[str]] = None,
-    test_label_paths: Optional[Tuple[str]] = None,
     patch_shape: Tuple[int, int, int],
-    save_root: Optional[str] = None,
     batch_size: int = 1,
     lr: float = 1e-4,
     n_iterations: int = int(1e5),
@@ -76,6 +74,9 @@ def supervised_training(
     sigma: int = None, 
     lower_bound: float = None, 
     upper_bound: float = None, 
+    test_paths: Optional[Tuple[str]] = None,
+    test_label_paths: Optional[Tuple[str]] = None,
+    save_root: Optional[str] = None,
     **loader_kwargs,
 ):
     """
@@ -87,19 +88,18 @@ def supervised_training(
         train_label_paths: Filepaths to the labels for the training data.
         val_paths: Filepaths to the files for the validation data.The files just contain the raw data.
         val_label_paths: Filepaths to the labels for the validation data.
-        test_paths: Filepaths to the files for the test data.The files just contain the raw data.
-        test_label_paths: Filepaths to the labels for the test data.
-        patch_shape: The patch shape used for a training example..
-        save_root: Folder where the checkpoint will be saved.
+        patch_shape: The patch shape used for a training example.
         batch_size: The batch size for training.
         lr: The initial learning rate.
         n_iterations: The number of iterations to train for.
         check: Whether to check the training and validation loaders instead of running training.
         out_channels: The number of output channels of the UNet.
         augmentations: Set to true if autmentations are needed.
+        test_paths: Filepaths to the files for the test data.The files just contain the raw data.
+        test_label_paths: Filepaths to the labels for the test data.
+        save_root: Folder where the checkpoint will be saved.
         loader_kwargs: Additional keyword arguments for the dataloader.
     """
-sss
     if augmentations:
         raw_transform = DataAugmentations(p=0.25)
         transform = get_augmentations(ndim=2)
@@ -111,7 +111,7 @@ sss
 
     train_loader, val_loader, _ = CreateDataLoader(train_paths, train_label_paths, val_paths, val_label_paths, test_paths, test_label_paths, 
                                                     raw_transform=raw_transform, transform=transform, 
-                                                    patch_shape=patch_shape, num_workers=num_workers, batch_size=batch_size, eps=epsilon, sigma=sigma, lower_bound=lower_bound, upper_bound=upper_bound)
+                                                    patch_shape=patch_shape, num_workers=num_workers, batch_size=batch_size, eps=eps, sigma=sigma, lower_bound=lower_bound, upper_bound=upper_bound)
 
 
     if check:

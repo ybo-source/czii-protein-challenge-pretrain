@@ -45,11 +45,8 @@ def train(key, ignore_label = None, training_2D = False, testset = True, extensi
         train_label_paths = train_label_paths,
         val_paths=val_paths,
         val_label_paths = val_label_paths,
-        test_paths=test_paths,
-        test_label_paths=test_label_paths,
         patch_shape=patch_shape, batch_size=batch_size,
         check=check,
-        save_root="/mnt/lustre-emmy-hdd/usr/u12095/synapse_net/models_v2",
         lr=1e-4,
         n_iterations=1e5,
         out_channels=1,
@@ -58,6 +55,9 @@ def train(key, ignore_label = None, training_2D = False, testset = True, extensi
         sigma=None,  
         lower_bound=None,
         upper_bound=None,
+        test_paths=test_paths,
+        test_label_paths=test_label_paths,
+        save_root="/mnt/lustre-emmy-hdd/usr/u12095/synapse_net/models_v2",
     )
 
 
