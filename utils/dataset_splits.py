@@ -67,7 +67,7 @@ def _require_train_val_split(datasets, train_root, output_root, extension):
             json.dump({"train": train, "val": val}, f)
 
 
-def get_paths(split, datasets, train_root, output_root, testset=True, extension="", label_root=None):
+def get_paths(split, datasets, train_root, output_root, testset=True, extension="zarr", label_root=None):
     if testset:
         _require_train_val_test_split(datasets, train_root, output_root, extension)
     else:
