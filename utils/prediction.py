@@ -28,6 +28,8 @@ def get_prediction_torch_em(
     Returns:
         The predicted volume.
     """
+    if verbose:
+        print("Predicting protein location in volume of shape", input_volume.shape)
 
     if model_path.endswith("best.pt"):
         model_path = os.path.split(model_path)[0]
@@ -53,11 +55,11 @@ def get_prediction_torch_em(
     # Suppress warning when loading the model.
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        if model is None:
-            if os.path.isdir(model_path):  # Load the model from a torch_em checkpoint.
-                model = torch_em.util.load_model(checkpoint=model_path, device=device)
-            else:  # Load the model directly from a serialized pytorch model.
-                model = torch.load(model_path)
+        
+        if os.path.isdir(model_path):  # Load the model from a torch_em checkpoint.
+            model = torch_em.util.load_model(checkpoint=model_path, device=device)
+        else:  # Load the model directly from a serialized pytorch model.
+            model = torch.load(model_path)
 
     # Run prediction with the model.
     with torch.no_grad():
