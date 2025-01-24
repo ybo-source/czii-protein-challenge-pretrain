@@ -152,7 +152,8 @@ def process_tomogram(json_folder, image_shape, eps=0.00001, sigma=None, lower_bo
     Returns:
         np.ndarray: Generated 3D heatmap.
     """
-    json_files = [os.path.join(json_folder, f) for f in os.listdir(json_folder) if f.endswith('.json')]
+    picks_folder = os.path.join(json_folder, "Picks")
+    json_files = [os.path.join(picks_folder, f) for f in os.listdir(picks_folder) if f.endswith('.json')]
     coordinates, protein_types = parse_json_files(json_files)
     width_dict = create_width_dict()
     return create_heatmap(image_shape, coordinates, protein_types, width_dict, eps, sigma, lower_bound, upper_bound)
