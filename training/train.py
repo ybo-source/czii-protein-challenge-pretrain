@@ -48,7 +48,7 @@ def train(key, ignore_label = None, training_2D = False, testset = True, extensi
         patch_shape=patch_shape, batch_size=batch_size,
         check=check,
         lr=1e-4,
-        n_iterations=1e5,
+        n_iterations=1e3,
         out_channels=1,
         augmentations=None,
         eps=1e-5, 
@@ -57,7 +57,7 @@ def train(key, ignore_label = None, training_2D = False, testset = True, extensi
         upper_bound=None,
         test_paths=test_paths,
         test_label_paths=test_label_paths,
-        save_root="/mnt/lustre-emmy-hdd/usr/u12095/synapse_net/models_v2",
+        save_root="/mnt/lustre-emmy-hdd/usr/u12095/cryo-et/czii_challenge/models",
     )
 
 
