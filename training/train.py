@@ -1,31 +1,39 @@
 import os
-from glob import glob
+# from glob import glob
 import argparse
 import sys
 sys.path.append("/user/muth9/u12095/czii-protein-challenge")
 
-from utils.dataset_splits import get_paths
-from utils.training import supervised_training
+from utils.dataset_splits import get_paths  # noqa
+from utils.training import supervised_training  # noqa
 
-TRAIN_ROOT = "/scratch-grete/projects/nim00007/cryo-et/challenge-data/train/static/" 
-LABEL_ROOT = "/scratch-grete/projects/nim00007/cryo-et/challenge-data/train/overlay/" 
+TRAIN_ROOT = "/scratch-grete/projects/nim00007/cryo-et/challenge-data/train/static/"
+LABEL_ROOT = "/scratch-grete/projects/nim00007/cryo-et/challenge-data/train/overlay/"
 OUTPUT_ROOT = "/mnt/lustre-emmy-hdd/usr/u12095/cryo-et/czii_challenge/training"
 
-def train(key, ignore_label = None, training_2D = False, testset = True, extension="zarr"):
 
-    datasets = [
-    "ExperimentRuns"
-]
-    model_name="protein_detection_czii_v1"
+def train(key, ignore_label=None, training_2D=False, testset=True, extension="zarr"):
 
-    output_path = os.path.join(OUTPUT_ROOT, model_name) 
+    datasets = ["ExperimentRuns"]
+    model_name = "protein_detection_czii_v1"
+
+    output_path = os.path.join(OUTPUT_ROOT, model_name)
     os.makedirs(output_path, exist_ok=True)
 
-    train_paths, train_label_paths = get_paths("train", datasets=datasets, train_root=TRAIN_ROOT, output_root=output_path, testset=testset, label_root=LABEL_ROOT)
-    val_paths, val_label_paths = get_paths("val", datasets=datasets, train_root=TRAIN_ROOT, output_root=output_path, testset=testset, label_root=LABEL_ROOT)
+    train_paths, train_label_paths = get_paths(
+        "train", datasets=datasets, train_root=TRAIN_ROOT,
+        output_root=output_path, testset=testset, label_root=LABEL_ROOT
+    )
+    val_paths, val_label_paths = get_paths(
+        "val", datasets=datasets, train_root=TRAIN_ROOT,
+        output_root=output_path, testset=testset, label_root=LABEL_ROOT
+    )
 
     if testset:
-        test_paths, test_label_paths = get_paths("test", datasets=datasets, train_root=TRAIN_ROOT, output_root=output_path, testset=testset, label_root=LABEL_ROOT)
+        test_paths, test_label_paths = get_paths(
+            "test", datasets=datasets, train_root=TRAIN_ROOT,
+            output_root=output_path, testset=testset, label_root=LABEL_ROOT
+        )
     else:
         test_paths, test_label_paths = None, None
 
@@ -35,24 +43,24 @@ def train(key, ignore_label = None, training_2D = False, testset = True, extensi
 
     patch_shape = [48, 256, 256]
 
-    batch_size = 2 
+    batch_size = 2
     check = False
 
-    #TODO do we want n_samples_train and n_samples_val in the supervised training?
+    # TODO do we want n_samples_train and n_samples_val in the supervised training?
     supervised_training(
         name=model_name,
         train_paths=train_paths,
-        train_label_paths = train_label_paths,
+        train_label_paths=train_label_paths,
         val_paths=val_paths,
-        val_label_paths = val_label_paths,
+        val_label_paths=val_label_paths,
         patch_shape=patch_shape, batch_size=batch_size,
         check=check,
         lr=1e-4,
         n_iterations=1e3,
         out_channels=1,
         augmentations=None,
-        eps=1e-5, 
-        sigma=None,  
+        eps=1e-5,
+        sigma=None,
         lower_bound=None,
         upper_bound=None,
         test_paths=test_paths,

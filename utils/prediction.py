@@ -1,14 +1,15 @@
 import os
 import time
 import warnings
-from glob import glob
-from typing import Dict, Optional, Tuple
+# from glob import glob
+from typing import Dict  # , Optional, Tuple
 
 import numpy as np
 import torch
 import torch_em
 
 from torch_em.util.prediction import predict_with_halo
+
 
 def get_prediction_torch_em(
     input_volume: np.ndarray,  # [z, y, x]
@@ -55,7 +56,7 @@ def get_prediction_torch_em(
     # Suppress warning when loading the model.
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        
+
         if os.path.isdir(model_path):  # Load the model from a torch_em checkpoint.
             model = torch_em.util.load_model(checkpoint=model_path, device=device)
         else:  # Load the model directly from a serialized pytorch model.

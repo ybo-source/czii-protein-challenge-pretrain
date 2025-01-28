@@ -20,7 +20,7 @@ def get_volume(input_path):
     return input_volume
 
 def run_protein_detection(input_path, output_path, model_path):
-    
+
     tiling = parse_tiling(tile_shape=None, halo=None) #TODO implement tiling and halo choices
     print(f"using tiling {tiling}")
 
@@ -82,12 +82,12 @@ def main():
     args = parser.parse_args()
 
     file = args.file
-    
+
     if file:
         run_protein_detection(args.input_path, args.output_path, args.model_path)
     else:
         process_folder(args)
-        
+
 
     print("Finished segmenting!")
 

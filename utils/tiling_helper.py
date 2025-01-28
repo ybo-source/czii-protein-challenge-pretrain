@@ -1,5 +1,6 @@
 import torch
 
+
 def get_default_tiling():
     """Determine the tile shape and halo depending on the available VRAM.
     """
