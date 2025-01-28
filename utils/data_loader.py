@@ -1,5 +1,5 @@
 from torch.utils.data import DataLoader
-from .heatmap_loader import HeatmapLoader
+from .heatmap_dataset import HeatmapDataset
 
 
 def create_data_loader(
@@ -10,18 +10,19 @@ def create_data_loader(
     raw_transform, transform,
     patch_shape, num_workers, batch_size,
     eps=0.00001, sigma=None,
-    lower_bound=None, upper_bound=None
+    lower_bound=None, upper_bound=None,
+    dataset_class=HeatmapDataset,
 ):
-    train_set = HeatmapLoader(
+    train_set = dataset_class(
         train_images, train_labels, patch_shape,
         raw_transform=raw_transform, transform=transform, eps=eps, sigma=sigma,
         lower_bound=lower_bound, upper_bound=upper_bound
     )
-    val_set = HeatmapLoader(
+    val_set = dataset_class(
         val_images, val_labels, patch_shape,
         raw_transform=raw_transform, transform=transform, eps=eps, sigma=sigma,
         lower_bound=lower_bound, upper_bound=upper_bound)
-    test_set = HeatmapLoader(
+    test_set = dataset_class(
         test_images, test_labels, patch_shape,
         raw_transform=raw_transform, transform=transform, eps=eps, sigma=sigma,
         lower_bound=lower_bound, upper_bound=upper_bound

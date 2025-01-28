@@ -9,7 +9,7 @@ import os
 from data_processing.create_heatmap import process_tomogram
 
 
-class HeatmapLoader(torch.utils.data.Dataset):
+class HeatmapDataset(torch.utils.data.Dataset):
     max_sampling_attempts = 500
 
     def __init__(
@@ -81,9 +81,19 @@ class HeatmapLoader(torch.utils.data.Dataset):
         raw, label = self.raw_images[index], self.label_images[index]
 
         # TODO this is specific for challenge zarr files now, maybe need to generalize in the future
+        # Yes ;). We can discuss this soon.
+
         # zarr_file = zarr.open(f"{raw}/VoxelSpacing10.000/denoised.zarr/0", mode='r')
         zarr_file = zarr.open(os.path.join(raw, "VoxelSpacing10.000", "denoised.zarr", "0"), mode='r')
-        raw = zarr_file[:]
+
+        # This was very inefficient!
+        # You first load the full data from zarr and then later load the bounding box.
+        # raw = zarr_file[:]
+        # Instead, you can just load the bounding box from the zarr
+        raw = zarr_file
+
+        # This is also quite inefficient.
+        # You compute he labels for the full tomogram, and then sub-sample.
         # sigma is not really used in my process_tomogram ... TODO ?
         label = process_tomogram(
             label, raw.shape, eps=self.eps, sigma=self.sigma,

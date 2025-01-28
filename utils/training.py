@@ -4,9 +4,10 @@ import torch
 import torch_em
 from torch_em.model import AnisotropicUNet
 import torch.nn as nn
-from torch_em.transform.augmentation import get_augmentations
+# from torch_em.transform.augmentation import get_augmentations
 
-from .data_loader import CreateDataLoader
+from .data_loader import create_data_loader
+from .heatmap_dataset import HeatmapDataset
 
 
 '''#Julias code ... don't know yet if I need to chage it ...
@@ -57,6 +58,7 @@ def get_3d_model(
     )
     return model
 
+
 def supervised_training(
     name: str,
     train_paths: Tuple[str],
@@ -69,14 +71,15 @@ def supervised_training(
     n_iterations: int = int(1e5),
     check: bool = False,
     out_channels: int = 2,
-    augmentations:Optional[bool] = False,
-    eps:float = 1e-5, 
-    sigma: int = None, 
-    lower_bound: float = None, 
-    upper_bound: float = None, 
+    augmentations: Optional[bool] = False,
+    eps: float = 1e-5,
+    sigma: int = None,
+    lower_bound: float = None,
+    upper_bound: float = None,
     test_paths: Optional[Tuple[str]] = None,
     test_label_paths: Optional[Tuple[str]] = None,
     save_root: Optional[str] = None,
+    dataset_class=HeatmapDataset,
     **loader_kwargs,
 ):
     """
@@ -99,36 +102,39 @@ def supervised_training(
         test_label_paths: Filepaths to the labels for the test data.
         save_root: Folder where the checkpoint will be saved.
         loader_kwargs: Additional keyword arguments for the dataloader.
+        dataset_class:
     """
     if augmentations:
-        raw_transform = DataAugmentations(p=0.25)
-        transform = get_augmentations(ndim=2)
+        # This is not implemented!
+        raise NotImplementedError
+        # raw_transform = DataAugmentations(p=0.25)
+        # transform = get_augmentations(ndim=2)
     else:
         raw_transform = None
         transform = None
 
-    num_workers = 6 #Julias example
+    num_workers = 6  # Julias example
 
-    train_loader, val_loader, _ = CreateDataLoader(train_paths, train_label_paths, val_paths, val_label_paths, test_paths, test_label_paths, 
-                                                    raw_transform=raw_transform, transform=transform, 
-                                                    patch_shape=patch_shape, num_workers=num_workers, batch_size=batch_size, eps=eps, sigma=sigma, lower_bound=lower_bound, upper_bound=upper_bound)
-
+    train_loader, val_loader, _ = create_data_loader(train_paths, train_label_paths,
+                                                     val_paths, val_label_paths,
+                                                     test_paths, test_label_paths,
+                                                     raw_transform=raw_transform, transform=transform,
+                                                     patch_shape=patch_shape, num_workers=num_workers,
+                                                     batch_size=batch_size, eps=eps, sigma=sigma,
+                                                     lower_bound=lower_bound, upper_bound=upper_bound,
+                                                     dataset_class=dataset_class)
 
     if check:
         from torch_em.util.debug import check_loader
         check_loader(train_loader, n_samples=4)
         check_loader(val_loader, n_samples=4)
         return
-    
-    in_channels = 1 #get_in_channels(train_images[0])
 
-    model = get_3d_model(in_channels=in_channels,out_channels=out_channels)
-
-    loss, metric = None, None
+    in_channels = 1  # get_in_channels(train_images[0])
+    model = get_3d_model(in_channels=in_channels, out_channels=out_channels)
 
     loss = nn.MSELoss(reduction="mean")
     metric = loss
-
 
     trainer = torch_em.default_segmentation_trainer(
         name=name,
