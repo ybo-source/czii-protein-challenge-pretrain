@@ -79,6 +79,8 @@ def supervised_training(
     test_paths: Optional[Tuple[str]] = None,
     test_label_paths: Optional[Tuple[str]] = None,
     save_root: Optional[str] = None,
+    n_samples_train: Optional[int] = None,
+    n_samples_val: Optional[int] = None,
     dataset_class=HeatmapDataset,
     **loader_kwargs,
 ):
@@ -101,8 +103,11 @@ def supervised_training(
         test_paths: Filepaths to the files for the test data.The files just contain the raw data.
         test_label_paths: Filepaths to the labels for the test data.
         save_root: Folder where the checkpoint will be saved.
+        n_samples_train: The number of samples for the training dataset.
+        n_samples_val: The number of samples for the validation dataset.
+        dataset_class: The dataset class to use. By default `HeatmapDataset`, which creates a detection
+            heatmap for the CZII Cryo Challenge data, is used.
         loader_kwargs: Additional keyword arguments for the dataloader.
-        dataset_class:
     """
     if augmentations:
         # This is not implemented!
@@ -122,8 +127,9 @@ def supervised_training(
                                                      patch_shape=patch_shape, num_workers=num_workers,
                                                      batch_size=batch_size, eps=eps, sigma=sigma,
                                                      lower_bound=lower_bound, upper_bound=upper_bound,
-                                                     dataset_class=dataset_class)
-
+                                                     dataset_class=dataset_class,
+                                                     n_samples_train=n_samples_train,
+                                                     n_samples_val=n_samples_val)
     if check:
         from torch_em.util.debug import check_loader
         check_loader(train_loader, n_samples=4)

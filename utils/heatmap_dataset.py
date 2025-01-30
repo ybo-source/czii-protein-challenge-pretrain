@@ -50,6 +50,8 @@ class HeatmapDataset(torch.utils.data.Dataset):
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
 
+        # TODO: n_samples should be derived from how often the bounding box fits
+        # rather than the number of volumes (as in SegmentationDataset)
         if n_samples is None:
             self._len = len(self.raw_images)
             self.sample_random_index = False

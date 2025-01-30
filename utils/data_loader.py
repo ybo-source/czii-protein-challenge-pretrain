@@ -12,16 +12,19 @@ def create_data_loader(
     eps=0.00001, sigma=None,
     lower_bound=None, upper_bound=None,
     dataset_class=HeatmapDataset,
+    n_samples_train=None,
+    n_samples_val=None,
 ):
     train_set = dataset_class(
         train_images, train_labels, patch_shape,
         raw_transform=raw_transform, transform=transform, eps=eps, sigma=sigma,
-        lower_bound=lower_bound, upper_bound=upper_bound
+        lower_bound=lower_bound, upper_bound=upper_bound, n_samples=n_samples_train,
     )
     val_set = dataset_class(
         val_images, val_labels, patch_shape,
         raw_transform=raw_transform, transform=transform, eps=eps, sigma=sigma,
-        lower_bound=lower_bound, upper_bound=upper_bound)
+        lower_bound=lower_bound, upper_bound=upper_bound, n_samples=n_samples_val,
+    )
     test_set = dataset_class(
         test_images, test_labels, patch_shape,
         raw_transform=raw_transform, transform=transform, eps=eps, sigma=sigma,
