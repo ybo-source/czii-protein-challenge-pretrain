@@ -42,7 +42,8 @@ def create_gaussian_stamp(width, eps, lower_bound, upper_bound):
     
     # Threshold the values based on epsilon and apply the scaling factor
     stamp[stamp < eps] = 0
-    stamp = stamp * 8 * np.pi * sigma**3
+    factor_3d = 2.5 #I had 1.6 as values for the centres of the gaussians before, but it should be 4, so 4/1.6=2.5
+    stamp = stamp * 8 * factor_3d * np.pi * sigma**3
 
     return stamp
 
