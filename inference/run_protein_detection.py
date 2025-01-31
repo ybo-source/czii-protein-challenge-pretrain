@@ -9,9 +9,9 @@ import json
 import sys
 sys.path.append("/user/muth9/u12095/czii-protein-challenge")
 
-from utils.prediction import get_prediction_torch_em
-from utils.protein_detection import protein_detection
-from utils.tiling_helper import parse_tiling
+from utils import get_prediction_torch_em
+from utils import protein_detection
+from utils import parse_tiling
 
 def get_volume(input_path):
     zarr_file = zarr.open(os.path.join(input_path, "VoxelSpacing10.000", "denoised.zarr", "0"), mode='r')

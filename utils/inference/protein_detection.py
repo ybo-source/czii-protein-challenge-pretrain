@@ -1,5 +1,6 @@
 import numpy as np
 from skimage.feature import blob_log
+from .gridsearch import gridsearch
 
 def protein_detection(heatmap): #TODO do this properly
     """
@@ -15,7 +16,7 @@ def protein_detection(heatmap): #TODO do this properly
     """
     detections = []
 
-    data_path=#TODO pass the val data paths
+    data_path="test"#TODO pass the val data paths
     threshold = gridsearch(data_path, model) 
     #smalles protein structure: "beta-amylase": 33.27
     #bigges protein structure: "ribosome": 109.02,

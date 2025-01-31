@@ -4,8 +4,8 @@ import argparse
 import sys
 sys.path.append("/user/muth9/u12095/czii-protein-challenge")
 
-from utils.dataset_splits import get_paths  # noqa
-from utils.training import supervised_training  # noqa
+from utils import get_paths  # noqa
+from utils import supervised_training  # noqa
 
 TRAIN_ROOT = "/scratch-grete/projects/nim00007/cryo-et/challenge-data/train/static/"
 LABEL_ROOT = "/scratch-grete/projects/nim00007/cryo-et/challenge-data/train/overlay/"
