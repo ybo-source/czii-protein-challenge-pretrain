@@ -1,6 +1,6 @@
 import torch
-from torch.utils.data import Dataset
-from torch_em.util import ensure_spatial_array, ensure_tensor_with_channels
+# from torch.utils.data import Dataset
+from torch_em.util import ensure_tensor_with_channels
 import numpy as np
 
 import zarr
@@ -8,7 +8,8 @@ import os
 
 from data_processing.create_heatmap import process_tomogram
 
-class HeatmapLoader(torch.utils.data.Dataset):
+
+class HeatmapDataset(torch.utils.data.Dataset):
     max_sampling_attempts = 500
 
     def __init__(
@@ -49,6 +50,8 @@ class HeatmapLoader(torch.utils.data.Dataset):
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
 
+        # TODO: n_samples should be derived from how often the bounding box fits
+        # rather than the number of volumes (as in SegmentationDataset)
         if n_samples is None:
             self._len = len(self.raw_images)
             self.sample_random_index = False
@@ -73,18 +76,31 @@ class HeatmapLoader(torch.utils.data.Dataset):
             for sh, psh in zip(shape, self.patch_shape)
         ]
         return tuple(slice(start, start + psh) for start, psh in zip(bb_start, self.patch_shape))
-        
+
     def _get_sample(self, index):
         if self.sample_random_index:
             index = np.random.randint(0, len(self.raw_images))
         raw, label = self.raw_images[index], self.label_images[index]
 
-        #TODO this is specific for challenge zarr files now, maybe need to generalize in the future
-        #zarr_file = zarr.open(f"{raw}/VoxelSpacing10.000/denoised.zarr/0", mode='r')
+        # TODO this is specific for challenge zarr files now, maybe need to generalize in the future
+        # Yes ;). We can discuss this soon.
+
+        # zarr_file = zarr.open(f"{raw}/VoxelSpacing10.000/denoised.zarr/0", mode='r')
         zarr_file = zarr.open(os.path.join(raw, "VoxelSpacing10.000", "denoised.zarr", "0"), mode='r')
-        raw = zarr_file[:]
-        #sigma is not really used in my process_tomogram ... TODO ?
-        label = process_tomogram(label, raw.shape, eps=self.eps, sigma=self.sigma, lower_bound=self.lower_bound, upper_bound=self.upper_bound)
+
+        # This was very inefficient!
+        # You first load the full data from zarr and then later load the bounding box.
+        # raw = zarr_file[:]
+        # Instead, you can just load the bounding box from the zarr
+        raw = zarr_file
+
+        # This is also quite inefficient.
+        # You compute he labels for the full tomogram, and then sub-sample.
+        # sigma is not really used in my process_tomogram ... TODO ?
+        label = process_tomogram(
+            label, raw.shape, eps=self.eps, sigma=self.sigma,
+            lower_bound=self.lower_bound, upper_bound=self.upper_bound
+        )
 
         have_raw_channels = raw.ndim == 4  # 3D with channels
         have_label_channels = label.ndim == 4
@@ -117,12 +133,11 @@ class HeatmapLoader(torch.utils.data.Dataset):
         if have_raw_channels and len(prefix_box) == 0:
             raw_patch = raw_patch.transpose((3, 0, 1, 2))  # Channels, Depth, Height, Width
 
-
         return raw_patch, label_patch
 
     def __getitem__(self, index):
         raw, labels = self._get_sample(index)
-        initial_label_dtype = labels.dtype
+        # initial_label_dtype = labels.dtype
 
         if self.raw_transform is not None:
             raw = self.raw_transform(raw)
@@ -132,7 +147,6 @@ class HeatmapLoader(torch.utils.data.Dataset):
 
         if self.transform is not None:
             raw, labels = self.transform(raw, labels)
-
 
         raw = ensure_tensor_with_channels(raw, ndim=self._ndim, dtype=self.dtype)
         labels = ensure_tensor_with_channels(labels, ndim=self._ndim, dtype=self.label_dtype)

@@ -2,7 +2,8 @@ import numpy as np
 from scipy.ndimage import gaussian_laplace, label, find_objects, center_of_mass
 from scipy.ndimage.measurements import variance
 
-def protein_detection(heatmap): #TODO do this properly
+
+def protein_detection(heatmap):  # TODO do this properly
     """
     Detects local maxima and estimates sizes of Gaussians in a 3D heatmap.
 
@@ -44,7 +45,6 @@ def protein_detection(heatmap): #TODO do this properly
         # Adjust coordinates to global
         starts = [r.start for r in region]  # Dynamically handle dimensions
         com_global = tuple(com[i] + starts[i] for i in range(len(starts)))
-
 
         detections.append({
             'coordinates': com_global,
