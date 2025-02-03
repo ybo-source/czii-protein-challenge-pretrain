@@ -2,7 +2,7 @@ import numpy as np
 from skimage.feature import blob_log
 from .gridsearch import gridsearch
 
-def protein_detection(heatmap): #TODO do this properly
+def protein_detection(heatmap, json_val_path, model_path): #TODO do this properly
     """
     Detects local maxima and estimates sizes of Gaussians in a 3D heatmap.
 
@@ -16,8 +16,7 @@ def protein_detection(heatmap): #TODO do this properly
     """
     detections = []
 
-    data_path="test"#TODO pass the val data paths
-    threshold = gridsearch(data_path, model) 
+    threshold = gridsearch(json_val_path, model_path) 
     #smalles protein structure: "beta-amylase": 33.27
     #bigges protein structure: "ribosome": 109.02,
     #0.3 is the factor to match the PDB size to the experimental data size

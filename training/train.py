@@ -15,7 +15,7 @@ OUTPUT_ROOT = "/mnt/lustre-emmy-hdd/usr/u12095/cryo-et/czii_challenge/training"
 def train(key, ignore_label=None, training_2D=False, testset=True, extension="zarr"):
 
     datasets = ["ExperimentRuns"]
-    model_name = "protein_detection_czii_v1"
+    model_name = "protein_detection_czii_v2"
 
     output_path = os.path.join(OUTPUT_ROOT, model_name)
     os.makedirs(output_path, exist_ok=True)

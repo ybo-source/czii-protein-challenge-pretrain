@@ -19,7 +19,7 @@ def get_volume(input_path):
 
     return input_volume
 
-def run_protein_detection(input_path, output_path, model_path):
+def run_protein_detection(input_path, output_path, model_path, json_val_path):
 
     tiling = parse_tiling(tile_shape=None, halo=None) #TODO implement tiling and halo choices
     print(f"using tiling {tiling}")
@@ -27,7 +27,8 @@ def run_protein_detection(input_path, output_path, model_path):
     input_volume = get_volume(input_path)
 
     pred = get_prediction_torch_em(input_volume=input_volume, tiling=tiling, model_path=model_path, verbose=True)
-    detections = protein_detection(pred)
+    print(f"using the validation set listed in {json_val_path}")
+    detections = protein_detection(pred, json_val_path, model_path)
 
     print(f"these are the results: {detections}")
 
@@ -59,7 +60,7 @@ def process_folder(args):
     for input_path in pbar:
 
         run_protein_detection(
-            input_path, args.output_path, args.model_path
+            input_path, args.output_path, args.model_path, args.json_val_path
         )
 
 def main():
@@ -79,12 +80,15 @@ def main():
     parser.add_argument(
         "--model_path", "-m", required=True, help="The filepath to the vesicle model."
     )
+    parser.add_argument(
+        "--json_val_path", "-j", required=True, help="The json filepath to the validation split from the training."
+    )
     args = parser.parse_args()
 
     file = args.file
 
     if file:
-        run_protein_detection(args.input_path, args.output_path, args.model_path)
+        run_protein_detection(args.input_path, args.output_path, args.model_path, args.json_val_path)
     else:
         process_folder(args)
 
