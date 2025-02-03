@@ -6,7 +6,7 @@ import numpy as np
 import zarr
 import os
 
-from data_processing.create_heatmap import process_tomogram
+from data_processing.create_heatmap import create_heatmap
 
 
 class HeatmapDataset(torch.utils.data.Dataset):
@@ -90,19 +90,8 @@ class HeatmapDataset(torch.utils.data.Dataset):
 
         raw = zarr_file
 
-        # This is also quite inefficient.
-        # You compute he labels for the full tomogram, and then sub-sample.
-        # sigma is not really used in my process_tomogram ... TODO ?
-        label = process_tomogram(
-            label, raw.shape, eps=self.eps, sigma=self.sigma,
-            lower_bound=self.lower_bound, upper_bound=self.upper_bound
-        )
-
         have_raw_channels = raw.ndim == 4  # 3D with channels
-        have_label_channels = label.ndim == 4
-        if have_label_channels:
-            raise NotImplementedError("Multi-channel labels are not supported.")
-
+        
         shape = raw.shape
         prefix_box = tuple()
         if have_raw_channels:
@@ -114,16 +103,28 @@ class HeatmapDataset(torch.utils.data.Dataset):
 
         bb = self._sample_bounding_box(shape)
 
-        #TODO partial loading of label from process_tomogram (adapt process_tomogram) -> make sure of offset
-        raw_patch = np.array(raw[prefix_box + bb])
-        label_patch = np.array(label[bb])
+        #TODO do I need this?
+        '''raw_patch = np.array(raw[prefix_box + bb])
+        label_patch = create_heatmap(
+            label, raw.shape, eps=self.eps, sigma=self.sigma,
+            lower_bound=self.lower_bound, upper_bound=self.upper_bound, bb=bb
+        )
+
+        have_label_channels = label_patch.ndim == 4
+        if have_label_channels:
+            raise NotImplementedError("Multi-channel labels are not supported.")'''
+
 
         if self.sampler is not None:
             sample_id = 0
             while not self.sampler(raw_patch, label_patch):
                 bb = self._sample_bounding_box(shape)
                 raw_patch = np.array(raw[prefix_box + bb])
-                label_patch = np.array(label[bb])
+                # sigma is not really used in my create_heatmap ... TODO ?
+                label_patch = create_heatmap(
+                    label, raw.shape, eps=self.eps, sigma=self.sigma,
+                    lower_bound=self.lower_bound, upper_bound=self.upper_bound, bb=bb
+                )
                 sample_id += 1
                 if sample_id > self.max_sampling_attempts:
                     raise RuntimeError(f"Could not sample a valid batch in {self.max_sampling_attempts} attempts")
@@ -140,6 +141,7 @@ class HeatmapDataset(torch.utils.data.Dataset):
         if self.raw_transform is not None:
             raw = self.raw_transform(raw)
 
+        #TODO label variable is maybe something else now, need to change? Also check for rest of file
         if self.label_transform is not None:
             labels = self.label_transform(labels)
 
