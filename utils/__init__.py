@@ -5,4 +5,4 @@ from .training.training import supervised_training
 from .prediction.prediction import get_prediction_torch_em
 from .inference.protein_detection import protein_detection
 from .training.tiling_helper import parse_tiling
-from .evaluation.evaluation_metrics import metric_coords, get_distance_threshold_from_gridsearch
+from .evaluation.evaluation_metrics import metric_coords, get_threshold_from_gridsearch

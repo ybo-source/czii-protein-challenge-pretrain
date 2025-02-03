@@ -4,7 +4,8 @@ import zarr
 import json
 from skimage.feature import blob_log
 from ..evaluation.evaluation_metrics import metric_coords, get_threshold_from_gridsearch 
-from utils import get_prediction_torch_em, parse_tiling
+from ..prediction.prediction import get_prediction_torch_em
+from ..training.tiling_helper import parse_tiling
 
 #TODO Do I want to make this more flexible??
 TRAIN_ROOT = "/scratch-grete/projects/nim00007/cryo-et/challenge-data/train/static/"
@@ -58,7 +59,7 @@ def gridsearch(json_val_path, model_path):
         input_volume = get_volume(image_path)
         pred = get_prediction_torch_em(input_volume=input_volume, tiling=tiling, model_path=model_path, verbose=True)
     
-        label_coords = #TODO function to get the label coordinates from label_path
+        label_coords = ""#TODO function to get the label coordinates from label_path
 
 
         for thresh in threshes:
