@@ -2,6 +2,7 @@ import pandas
 from tqdm import tqdm
 import zarr
 import json
+import os
 from skimage.feature import blob_log
 from ..evaluation.evaluation_metrics import metric_coords, get_threshold_from_gridsearch 
 from ..prediction.prediction import get_prediction_torch_em
@@ -67,7 +68,7 @@ def gridsearch(json_val_path, model_path):
             #bigges protein structure: "ribosome": 109.02,
             #0.3 is the factor to match the PDB size to the experimental data size
             adj_factor=0.3 #TODO implement this as an argument, also when creating heatmap                
-            pred_coords = blob_log(pred, min_sigma=33.27*adj_factor, max_sigma=109.02*adj_factor, threshold_abs=thresh) 
+            pred_coords = blob_log(pred, min_sigma=33.27*adj_factor *0.9, max_sigma=109.02*adj_factor*1.1, threshold_abs=thresh) 
 
 
             _, _, f1, _, _, _ = metric_coords(label_coords, pred_coords) #TODO

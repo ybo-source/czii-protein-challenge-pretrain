@@ -88,10 +88,6 @@ class HeatmapDataset(torch.utils.data.Dataset):
         # zarr_file = zarr.open(f"{raw}/VoxelSpacing10.000/denoised.zarr/0", mode='r')
         zarr_file = zarr.open(os.path.join(raw, "VoxelSpacing10.000", "denoised.zarr", "0"), mode='r')
 
-        # This was very inefficient!
-        # You first load the full data from zarr and then later load the bounding box.
-        # raw = zarr_file[:]
-        # Instead, you can just load the bounding box from the zarr
         raw = zarr_file
 
         # This is also quite inefficient.
@@ -117,6 +113,8 @@ class HeatmapDataset(torch.utils.data.Dataset):
                 prefix_box = (slice(None), )
 
         bb = self._sample_bounding_box(shape)
+
+        #TODO partial loading of label from process_tomogram (adapt process_tomogram) -> make sure of offset
         raw_patch = np.array(raw[prefix_box + bb])
         label_patch = np.array(label[bb])
 

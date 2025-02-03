@@ -11,6 +11,6 @@ source ~/.bashrc
 conda activate deeplearning
 python /user/muth9/u12095/czii-protein-challenge/inference/run_protein_detection.py \
     -i /scratch-grete/projects/nim00007/cryo-et/challenge-data/train/static/ExperimentRuns/TS_69_2 -f \
-    -o /mnt/lustre-emmy-hdd/usr/u12095/cryo-et/czii_challenge/detections/protein_detection_czii_v2 \
+    -o /mnt/lustre-emmy-hdd/usr/u12095/cryo-et/czii_challenge/detections \
     -m /mnt/lustre-emmy-hdd/usr/u12095/cryo-et/czii_challenge/models/checkpoints/protein_detection_czii_v2 \
     -j /mnt/lustre-emmy-hdd/usr/u12095/cryo-et/czii_challenge/training/protein_detection_czii_v2/split-ExperimentRuns.json

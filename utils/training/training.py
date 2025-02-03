@@ -34,7 +34,7 @@ def get_3d_model(
     out_channels: int,
     scale_factors: Tuple[Tuple[int, int, int]] = [[1, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2]],
     initial_features: int = 32,
-    final_activation: str = "Sigmoid",
+    final_activation: Optional[str] = None,
 ) -> torch.nn.Module:
     """Get the 3D U-Net model.
 

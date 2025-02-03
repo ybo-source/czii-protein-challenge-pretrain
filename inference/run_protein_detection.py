@@ -33,7 +33,7 @@ def run_protein_detection(input_path, output_path, model_path, json_val_path):
     print(f"these are the results: {detections}")
 
     #TODO saving
-    model_name = os.path.basename(os.path.dirname(model_path))
+    model_name = os.path.basename(os.path.normpath(model_path))
     input_name = os.path.basename(input_path)
     output_folder = os.path.join(output_path, model_name)
     os.makedirs(output_folder, exist_ok=True)
