@@ -183,9 +183,7 @@ def get_tomo_shape(zarr_folder):
     return traverse_zarr(zarr_store)
 
 def main():
-    """
-    Main function to parse arguments and create a heatmap from a tomogram.
-    """
+
     parser = argparse.ArgumentParser(description="Generate a 3D heatmap from a tomogram and JSON files.")
     parser.add_argument("--zarr_path", "-z", type=str, required=True, help="Path to zarr file.")
     parser.add_argument("--json_folder", "-j", type=str, required=True, help="Path to the folder containing the 6 corresponding JSON files.")

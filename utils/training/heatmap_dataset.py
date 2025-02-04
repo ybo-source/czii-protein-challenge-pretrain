@@ -102,9 +102,9 @@ class HeatmapDataset(torch.utils.data.Dataset):
                 prefix_box = (slice(None), )
 
         bb = self._sample_bounding_box(shape)
-
-        #TODO do I need this?
-        '''raw_patch = np.array(raw[prefix_box + bb])
+        
+        raw_patch = np.array(raw[prefix_box + bb])
+        # sigma is not really used in my create_heatmap ... TODO ?
         label_patch = create_heatmap(
             label, raw.shape, eps=self.eps, sigma=self.sigma,
             lower_bound=self.lower_bound, upper_bound=self.upper_bound, bb=bb
@@ -112,7 +112,7 @@ class HeatmapDataset(torch.utils.data.Dataset):
 
         have_label_channels = label_patch.ndim == 4
         if have_label_channels:
-            raise NotImplementedError("Multi-channel labels are not supported.")'''
+            raise NotImplementedError("Multi-channel labels are not supported.")
 
 
         if self.sampler is not None:
