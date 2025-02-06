@@ -1,1 +1,1 @@
-from .create_heatmap import process_tomogram
+from .create_heatmap import create_heatmap

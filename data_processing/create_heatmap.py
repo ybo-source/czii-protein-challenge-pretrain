@@ -115,7 +115,7 @@ def create_heatmap(json_folder, image_shape, eps=0.00001, sigma=None, lower_boun
     width_dict = create_width_dict()
     
     if bb:
-        z_min, z_max, y_min, y_max, x_min, x_max = bb
+        (z_min, z_max), (y_min, y_max), (x_min, x_max) = [(s.start, s.stop) for s in bb]
         restricted_shape = (z_max - z_min, y_max - y_min, x_max - x_min)
         heatmap = np.zeros(restricted_shape)
     else:
@@ -149,6 +149,17 @@ def create_heatmap(json_folder, image_shape, eps=0.00001, sigma=None, lower_boun
         )
     
     return heatmap
+
+def get_label(json_folder, image_shape, eps=0.00001, sigma=None, lower_bound=None, upper_bound=None, bb=None):
+
+    have_single_file = isinstance(json_folder, str)
+
+    if have_single_file:
+        return create_heatmap(json_folder, image_shape, eps, sigma, lower_bound, upper_bound, bb)
+    else:
+        print(f"len json folder {len(json_folder)}")
+        return np.stack([create_heatmap(p, image_shape, eps, sigma, lower_bound, upper_bound, bb) for p in json_folder])
+
 
 def get_tomo_shape(zarr_folder):
     """

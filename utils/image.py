@@ -2,6 +2,7 @@ import os
 import zarr
 import numpy as np
 from typing import Union, Sequence
+from numpy.typing import ArrayLike
 
 def load_image(image_path):
     """@private
@@ -24,7 +25,6 @@ def load_data(
     #TODO can expand to also read in a key (check torch-em/torch_em/util/image.py)
 
     have_single_file = isinstance(path, str)
-    have_single_key = isinstance(key, str)
 
     if have_single_file:
         return load_image(path)
