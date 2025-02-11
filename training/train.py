@@ -46,6 +46,11 @@ def train(key, ignore_label=None, training_2D=False, testset=True, extension="za
     batch_size = 2
     check = False
 
+    #add the zarr file path ending to each path
+    train_paths = [os.path.join(path, "VoxelSpacing10.000", "denoised.zarr") for path in train_paths]
+    val_paths = [os.path.join(path, "VoxelSpacing10.000", "denoised.zarr") for path in val_paths]
+    test_paths = [os.path.join(path, "VoxelSpacing10.000", "denoised.zarr") for path in test_paths]
+
     # TODO do we want n_samples_train and n_samples_val in the supervised training?
     supervised_training(
         name=model_name,
@@ -53,6 +58,7 @@ def train(key, ignore_label=None, training_2D=False, testset=True, extension="za
         train_label_paths=train_label_paths,
         val_paths=val_paths,
         val_label_paths=val_label_paths,
+        raw_key = "0",
         patch_shape=patch_shape, batch_size=batch_size,
         check=check,
         lr=1e-4,
