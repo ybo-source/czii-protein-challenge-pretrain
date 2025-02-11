@@ -50,18 +50,18 @@ class HeatmapDataset(torch.utils.data.Dataset):
     ):
         self.raw_path = raw_path
         self.raw_key = raw_key
-        print(f"raw_path {raw_path}, raw_key {raw_key}")
+        #print(f"raw_path {raw_path}, raw_key {raw_key}")
         self.raw = load_data(raw_path, raw_key)
-        print(f"self.raw {self.raw}")
+        #print(f"self.raw {self.raw}")
 
         self.label_path = label_path
-        print(f"self.label_path {self.label_path}")
+        #print(f"self.label_path {self.label_path}")
 
         self._with_channels = with_channels
         self._with_label_channels = with_label_channels
 
         shape_raw = self.raw.shape[1:] if self._with_channels else self.raw.shape
-        print(f"shape_raw {shape_raw}")
+        #print(f"shape_raw {shape_raw}")
 
         self.shape = shape_raw
 

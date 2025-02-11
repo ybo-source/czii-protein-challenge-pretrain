@@ -27,10 +27,8 @@ def _load_dataset(
     dataset_class=HeatmapDataset,
     n_samples=None,
 ):
-    print(f"in _load_dataset raw_paths {raw_paths}")
 
     if isinstance(raw_paths, str):
-        print(f"in isinstance raw_paths {raw_paths}")
         ds = dataset_class(
         raw_path=raw_paths, raw_key=raw_key, label_path=label_paths, patch_shape=patch_shape,
         raw_transform=raw_transform, transform=transform, eps=eps, sigma=sigma,
@@ -44,7 +42,6 @@ def _load_dataset(
         )
         ds = []
         for i, (raw_path, label_path) in enumerate(zip(raw_paths, label_paths)):
-            print(f"in else raw_path {raw_path}")
 
             dset = dataset_class(
             raw_path=raw_path, raw_key=raw_key, label_path=label_path, patch_shape=patch_shape,
