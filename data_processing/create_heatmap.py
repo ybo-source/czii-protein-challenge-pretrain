@@ -92,6 +92,9 @@ def create_width_dict():
         "virus-like-particle": 79.07
     }
 
+def precompute_gaussians(width_dict, eps, lower_bound, upper_bound):
+    return {protein: create_gaussian_stamp(int(width * 0.3), eps, lower_bound, upper_bound) for protein, width in width_dict.items()}
+
 def create_heatmap(json_folder, image_shape, eps=0.00001, sigma=None, lower_bound=None, upper_bound=None, bb=None):
     """
     Process a tomogram by creating a heatmap based on protein data from JSON files,
@@ -113,6 +116,7 @@ def create_heatmap(json_folder, image_shape, eps=0.00001, sigma=None, lower_boun
     json_files = [os.path.join(picks_folder, f) for f in os.listdir(picks_folder) if f.endswith('.json')]
     coordinates, protein_types = parse_json_files(json_files)
     width_dict = create_width_dict()
+    gaussian_dict = precompute_gaussians(width_dict, eps, lower_bound, upper_bound)
     
     if bb:
         (z_min, z_max), (y_min, y_max), (x_min, x_max) = [(s.start, s.stop) for s in bb]
@@ -123,8 +127,7 @@ def create_heatmap(json_folder, image_shape, eps=0.00001, sigma=None, lower_boun
     
     for coord, protein in zip(coordinates, protein_types):
         z, y, x = map(int, coord)
-        width = width_dict.get(protein, 1.0)
-        gaussian = create_gaussian_stamp(int(width * 0.3), eps, lower_bound, upper_bound)
+        gaussian = gaussian_dict.get(protein, create_gaussian_stamp(1, eps, lower_bound, upper_bound))
         
         if bb and not (z_min <= z < z_max and y_min <= y < y_max and x_min <= x < x_max):
             continue

@@ -28,9 +28,9 @@ def run_protein_detection(input_path, output_path, model_path, json_val_path):
 
     pred = get_prediction_torch_em(input_volume=input_volume, tiling=tiling, model_path=model_path, verbose=True)
     print(f"using the validation set listed in {json_val_path}")
-    detections = protein_detection(pred, json_val_path, model_path)
+    #detections = protein_detection(pred, json_val_path, model_path)
 
-    print(f"these are the results: {detections}")
+    #print(f"these are the results: {detections}")
 
     #TODO saving
     model_name = os.path.basename(os.path.normpath(model_path))
@@ -45,10 +45,10 @@ def run_protein_detection(input_path, output_path, model_path, json_val_path):
     print(f"Heatmap saved to {output_np_file}")
 
     # Save results to a JSON file
-    output_json_file = os.path.join(output_folder, f"{input_name}_protein_detections.json")
+    '''output_json_file = os.path.join(output_folder, f"{input_name}_protein_detections.json")
     with open(output_json_file, "w") as f:
         json.dump(detections, f, indent=4)
-    print(f"Coordinates saved to {output_json_file}")
+    print(f"Coordinates saved to {output_json_file}")'''
 
 
 def process_folder(args):
