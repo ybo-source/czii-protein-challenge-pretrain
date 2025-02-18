@@ -42,59 +42,10 @@ def create_gaussian_stamp(width, eps, lower_bound, upper_bound):
     
     # Threshold the values based on epsilon and apply the scaling factor
     stamp[stamp < eps] = 0
-    stamp = stamp * 8 * np.pi * sigma**3
+    factor_3d = 2.5 #I had 1.6 as values for the centres of the gaussians before, but it should be 4, so 4/1.6=2.5
+    stamp = stamp * 8 * factor_3d * np.pi * sigma**3
 
     return stamp
-
-def create_heatmap(image_shape, coordinates, protein_types, width_dict, eps=0.00001, sigma=None, lower_bound=None, upper_bound=None):
-    """
-    Create a 3D heatmap based on given coordinates and protein types.
-
-    Parameters:
-        image_shape (tuple): Shape of the 3D image (z, y, x).
-        coordinates (list of tuples): List of (z, y, x) coordinates.
-        protein_types (list): List of protein types corresponding to each coordinate.
-        sigma_dict (dict): Dictionary mapping protein types to Gaussian widths (sigmas).
-
-    Returns:
-        np.ndarray: A 3D heatmap with Gaussian distributions at specified coordinates.
-    """
-    heatmap = np.zeros(image_shape)
-
-    for coord, protein in zip(coordinates, protein_types):
-        z, y, x = map(int, coord)  # Convert coordinates to integers for indexing
-        width = width_dict.get(protein, 1.0)  # Default sigma is 1.0 if protein type is not found
-        # Create a sparse 3D array with a single point at the coordinate
-        point = np.zeros(image_shape)
-        point[z, y, x] = 1
-
-        '''# Apply Gaussian filter with constant boundary condition
-        # mode='constant' ensures that values outside the image bounds are treated as zero
-        gaussian = gaussian_filter(point, sigma=sigma, mode='constant')'''
-        gaussian = create_gaussian_stamp(int(width * 0.3), eps, lower_bound, upper_bound)
-        '''# Update the heatmap using the maximum of the current heatmap and the new Gaussian (takes care of overlapping gaussians)
-        heatmap = np.maximum(heatmap, gaussian)'''
-
-        # Define the bounds for placement of the Gaussian in the heatmap
-        z_min = max(0, z - gaussian.shape[0] // 2)
-        z_max = min(image_shape[0], z + gaussian.shape[0] // 2 + 1)
-        y_min = max(0, y - gaussian.shape[1] // 2)
-        y_max = min(image_shape[1], y + gaussian.shape[1] // 2 + 1)
-        x_min = max(0, x - gaussian.shape[2] // 2)
-        x_max = min(image_shape[2], x + gaussian.shape[2] // 2 + 1)
-
-        # Slice the heatmap and add the Gaussian stamp (handling boundaries)
-        heatmap[z_min:z_max, y_min:y_max, x_min:x_max] = np.maximum(
-            heatmap[z_min:z_max, y_min:y_max, x_min:x_max], gaussian[
-                (z_min - (z - gaussian.shape[0] // 2)):(z_max - (z - gaussian.shape[0] // 2)),
-                (y_min - (y - gaussian.shape[1] // 2)):(y_max - (y - gaussian.shape[1] // 2)),
-                (x_min - (x - gaussian.shape[2] // 2)):(x_max - (x - gaussian.shape[2] // 2))
-            ]
-        )
-    
-    assert image_shape == heatmap.shape, f"Shape mismatch: image_shape={image_shape}, heatmap.shape={heatmap.shape}"
-
-    return heatmap
     
 def parse_json_files(json_files):
     """
@@ -141,21 +92,77 @@ def create_width_dict():
         "virus-like-particle": 79.07
     }
 
-def process_tomogram(json_folder, image_shape, eps=0.00001, sigma=None, lower_bound=None, upper_bound=None):
+def precompute_gaussians(width_dict, eps, lower_bound, upper_bound):
+    return {protein: create_gaussian_stamp(int(width * 0.3), eps, lower_bound, upper_bound) for protein, width in width_dict.items()}
+
+def create_heatmap(json_folder, image_shape, eps=0.00001, sigma=None, lower_bound=None, upper_bound=None, bb=None):
     """
-    Process a tomogram by creating a heatmap based on protein data from JSON files.
+    Process a tomogram by creating a heatmap based on protein data from JSON files,
+    with optional bounding box constraints.
 
     Parameters:
         json_folder (str): Path to the folder containing JSON files.
         image_shape (tuple): Shape of the 3D image (z, y, x).
+        eps (float): Threshold for truncating the Gaussian.
+        sigma (float, optional): Fixed sigma value for Gaussian.
+        lower_bound (float, optional): Minimum allowed sigma.
+        upper_bound (float, optional): Maximum allowed sigma.
+        bb (tuple, optional): Bounding box (z_min, z_max, y_min, y_max, x_min, x_max).
 
     Returns:
         np.ndarray: Generated 3D heatmap.
     """
-    json_files = [os.path.join(json_folder, f) for f in os.listdir(json_folder) if f.endswith('.json')]
+    picks_folder = os.path.join(json_folder, "Picks")
+    json_files = [os.path.join(picks_folder, f) for f in os.listdir(picks_folder) if f.endswith('.json')]
     coordinates, protein_types = parse_json_files(json_files)
     width_dict = create_width_dict()
-    return create_heatmap(image_shape, coordinates, protein_types, width_dict, eps, sigma, lower_bound, upper_bound)
+    gaussian_dict = precompute_gaussians(width_dict, eps, lower_bound, upper_bound)
+    
+    if bb:
+        (z_min, z_max), (y_min, y_max), (x_min, x_max) = [(s.start, s.stop) for s in bb]
+        restricted_shape = (z_max - z_min, y_max - y_min, x_max - x_min)
+        heatmap = np.zeros(restricted_shape)
+    else:
+        heatmap = np.zeros(image_shape)
+    
+    for coord, protein in zip(coordinates, protein_types):
+        z, y, x = map(int, coord)
+        gaussian = gaussian_dict.get(protein, create_gaussian_stamp(1, eps, lower_bound, upper_bound))
+        
+        if bb and not (z_min <= z < z_max and y_min <= y < y_max and x_min <= x < x_max):
+            continue
+        
+        z_offset, y_offset, x_offset = (z_min, y_min, x_min) if bb else (0, 0, 0)
+        z, y, x = z - z_offset, y - y_offset, x - x_offset
+        
+        z_min_hm = max(0, z - gaussian.shape[0] // 2)
+        z_max_hm = min(heatmap.shape[0], z + gaussian.shape[0] // 2 + 1)
+        y_min_hm = max(0, y - gaussian.shape[1] // 2)
+        y_max_hm = min(heatmap.shape[1], y + gaussian.shape[1] // 2 + 1)
+        x_min_hm = max(0, x - gaussian.shape[2] // 2)
+        x_max_hm = min(heatmap.shape[2], x + gaussian.shape[2] // 2 + 1)
+        
+        heatmap[z_min_hm:z_max_hm, y_min_hm:y_max_hm, x_min_hm:x_max_hm] = np.maximum(
+            heatmap[z_min_hm:z_max_hm, y_min_hm:y_max_hm, x_min_hm:x_max_hm],
+            gaussian[
+                (z_min_hm - (z - gaussian.shape[0] // 2)):(z_max_hm - (z - gaussian.shape[0] // 2)),
+                (y_min_hm - (y - gaussian.shape[1] // 2)):(y_max_hm - (y - gaussian.shape[1] // 2)),
+                (x_min_hm - (x - gaussian.shape[2] // 2)):(x_max_hm - (x - gaussian.shape[2] // 2))
+            ]
+        )
+    
+    return heatmap
+
+def get_label(json_folder, image_shape, eps=0.00001, sigma=None, lower_bound=None, upper_bound=None, bb=None):
+
+    have_single_file = isinstance(json_folder, str)
+
+    if have_single_file:
+        return create_heatmap(json_folder, image_shape, eps, sigma, lower_bound, upper_bound, bb)
+    else:
+        print(f"len json folder {len(json_folder)}")
+        return np.stack([create_heatmap(p, image_shape, eps, sigma, lower_bound, upper_bound, bb) for p in json_folder])
+
 
 def get_tomo_shape(zarr_folder):
     """
@@ -190,9 +197,7 @@ def get_tomo_shape(zarr_folder):
     return traverse_zarr(zarr_store)
 
 def main():
-    """
-    Main function to parse arguments and create a heatmap from a tomogram.
-    """
+
     parser = argparse.ArgumentParser(description="Generate a 3D heatmap from a tomogram and JSON files.")
     parser.add_argument("--zarr_path", "-z", type=str, required=True, help="Path to zarr file.")
     parser.add_argument("--json_folder", "-j", type=str, required=True, help="Path to the folder containing the 6 corresponding JSON files.")
@@ -208,7 +213,7 @@ def main():
 
         output_file =  os.path.join(output_folder, "heatmap.npy")
 
-        heatmap = process_tomogram(json_folder, tomogram_shape)
+        heatmap = create_heatmap(json_folder, tomogram_shape)
 
         # Save the heatmap to a file
         np.save(output_file, heatmap)

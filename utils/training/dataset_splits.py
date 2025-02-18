@@ -23,7 +23,7 @@ def _require_train_val_test_split(datasets, train_root, output_root, extension):
             continue
 
         ds_path = os.path.join(train_root, ds)
-        #need to check if the dataset contains files or folders (like eg for zarr)
+        # need to check if the dataset contains files or folders (like eg for zarr)
         if any(os.path.isfile(os.path.join(ds_path, f)) for f in os.listdir(ds_path)):
             # If the dataset contains files
             file_paths = sorted(glob(os.path.join(ds_path, f"*.{extension}")))
@@ -39,7 +39,7 @@ def _require_train_val_test_split(datasets, train_root, output_root, extension):
 
 
 def _require_train_val_split(datasets, train_root, output_root, extension):
-    train_ratio, val_ratio = 0.8, 0.2
+    train_ratio, val_ratio = 0.8, 0.2  # noqa
 
     def _train_val_split(names):
         train, val = train_test_split(names, test_size=1 - train_ratio, shuffle=True)
@@ -52,7 +52,7 @@ def _require_train_val_split(datasets, train_root, output_root, extension):
             continue
 
         ds_path = os.path.join(train_root, ds)
-        #need to check if the dataset contains files or folders (like eg for zarr)
+        # need to check if the dataset contains files or folders (like eg for zarr)
         if any(os.path.isfile(os.path.join(ds_path, f)) for f in os.listdir(ds_path)):
             # If the dataset contains files
             file_paths = sorted(glob(os.path.join(ds_path, f"*.{extension}")))
