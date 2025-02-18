@@ -2,6 +2,7 @@
 slurm/
 assisting_files/
 __pycache__/
+evaluation/results/
 
 # Ignore all .log files
 *.log
