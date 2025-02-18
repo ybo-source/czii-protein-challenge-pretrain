@@ -43,7 +43,7 @@ def get_full_label_path(json_val_path, val_path):
 def gridsearch(json_val_path, model_path):
     print("starting grid search")
 
-    threshes = np.arange(1.0, 2.0, 0.1)
+    threshes = np.arange(1.0, 2.5, 0.1)
     data = []
 
     # Load JSON from the file

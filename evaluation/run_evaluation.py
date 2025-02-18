@@ -2,15 +2,56 @@ import os
 import csv
 import argparse
 from tqdm import tqdm
+import sys
+sys.path.append("/user/muth9/u12095/czii-protein-challenge")
 
-from utils.evaluation.evaluation_metrics import metric_coords
+import numpy as np
+import json
+
+from utils import metric_coords
 from data_processing.create_heatmap import parse_json_files
 
-def evaluate(pred_coords, label_path, model_name, input_name):
+def evaluate_per_protein_type(pred_coords, label_path, model_name, input_name):
     json_files = [os.path.join(label_path, f) for f in os.listdir(label_path) if f.endswith('.json')]
     label_coords, protein_types = parse_json_files(json_files)
+    
+    # Organize label_coords by protein type
+    label_dict = {}
+    for coord, p_type in zip(label_coords, protein_types):
+        if p_type not in label_dict:
+            label_dict[p_type] = []
+        label_dict[p_type].append(coord)
+    
+    results_folder = os.path.join(os.path.dirname(__file__), "results")
+    os.makedirs(results_folder, exist_ok=True)
+    csv_file = os.path.join(results_folder, f"evaluation_{model_name}.csv")
+    
+    # Check if the file exists to determine whether to write the header
+    write_header = not os.path.exists(csv_file)
+    
+    with open(csv_file, mode='a', newline='') as file:
+        writer = csv.writer(file)
+        if write_header:
+            writer.writerow(["input_name", "protein_type", "precision", "recall", "f1", "dev_percentage", "sMAPE", "mae"])
+        
+        for protein_type, label_coords_subset in label_dict.items():
+            
+            precision, recall, f1, dev_percentage, sMAPE, mae = metric_coords(label_coords_subset, pred_coords)
+            
+            # Extend input name
+            writer.writerow([input_name, protein_type, precision, recall, f1, dev_percentage, sMAPE, mae])
+    
+    print(f"Per-protein metrics saved to {csv_file}")
 
-    precision, recall, f1, dev_percentage, sMAPE, mae = metric_coords(label_coords, pred_coords)
+def evaluate(pred_coords, label_path, model_name, input_name, evaluate_per_protein=True):
+    json_files = [os.path.join(label_path, f) for f in os.listdir(label_path) if f.endswith('.json')]
+    label_coords, protein_types = parse_json_files(json_files)
+    with open(pred_coords, "r") as f:
+        points = json.load(f)
+    # Convert to NumPy array
+    predictions = np.array(points)
+
+    precision, recall, f1, dev_percentage, sMAPE, mae = metric_coords(label_coords, predictions)
 
     results_folder = os.path.join(os.path.dirname(__file__), "results")
     os.makedirs(results_folder, exist_ok=True)
@@ -23,15 +64,18 @@ def evaluate(pred_coords, label_path, model_name, input_name):
     with open(csv_file, mode='a', newline='') as file:
         writer = csv.writer(file)
         if write_header:
-            writer.writerow(["input_name", "precision", "recall", "f1", "dev_percentage", "sMAPE", "mae"])
-        writer.writerow([input_name, precision, recall, f1, dev_percentage, sMAPE, mae])
+            writer.writerow(["input_name", "protein_type", "precision", "recall", "f1", "dev_percentage", "sMAPE", "mae"])
+        writer.writerow([input_name, "all", precision, recall, f1, dev_percentage, sMAPE, mae])
 
     print(f"Metrics saved to {csv_file}")
 
-def process_folder(args):
+    if evaluate_per_protein:
+        evaluate_per_protein_type(predictions, label_path, model_name, input_name)
+
+def process_folder(args, file_ending):
     # Get all prediction files
     input_files = [os.path.join(args.pred_coords, name) for name in os.listdir(args.pred_coords)
-                   if name.endswith("_protein_detections.json") and os.path.isfile(os.path.join(args.pred_coords, name))]
+                   if name.endswith(f"{file_ending}.json") and os.path.isfile(os.path.join(args.pred_coords, name))]
 
     # Get all label subfolders
     label_subfolders = {name: os.path.join(args.label_path, name) for name in os.listdir(args.label_path)
@@ -41,7 +85,7 @@ def process_folder(args):
 
     for pred_coords in pbar:
         # Extract input_name from the filename
-        input_name = os.path.basename(pred_coords).replace("_protein_detections.json", "")
+        input_name = os.path.basename(pred_coords).replace(f"{file_ending}.json", "")
 
         # Match with label subfolder
         label_folder = label_subfolders.get(input_name)
@@ -69,16 +113,18 @@ def main():
 
     args = parser.parse_args()
 
+    file_ending = "_protein_detections_peak_local_max"
+
     if os.path.isfile(args.pred_coords) and args.pred_coords.endswith(".json"):
         # Extract input_name from the filename
-        input_name = os.path.basename(args.pred_coords).replace("_protein_detections.json", "")
+        input_name = os.path.basename(args.pred_coords).replace(f"{file_ending}.json", "")
         evaluate(args.pred_coords, args.label_path, args.model_name, input_name)
     elif os.path.isdir(args.pred_coords) and any(f.endswith(".json") for f in os.listdir(args.pred_coords)):
-        process_folder(args)
+        process_folder(args, file_ending)
     else:
         print("Invalid input")
 
-    print("Finished segmenting!")
+    print("Finished evaluating!")
 
 if __name__ == "__main__":
     main()
